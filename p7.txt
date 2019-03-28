@@ -1,0 +1,198 @@
+import java.io.*;
+import java.net.ServerSocket;
+import java.net.Socket;
+public class Prac7Server {
+public static void main(String[] args)
+{
+starting:
+while(true)
+{
+try
+{
+System.out.println("---------------------------SERVER--------------------------------
+");
+ServerSocket ss=new ServerSocket(6666);
+System.out.println("Waiting for Client...");
+Socket s=ss.accept();
+System.out.println("Connection established...");
+DataInputStream dataread=new DataInputStream(s.getInputStream());
+DataOutputStream datasend=new DataOutputStream(s.getOutputStream());
+String clientmessage=dataread.readUTF();
+System.out.println("Message received from client: "+clientmessage);
+if(clientmessage.equalsIgnoreCase("no"))
+{
+System.out.println("Exiting Message sending to client!!! ");
+datasend.writeUTF("ok");
+Thread t =new Thread();
+t.sleep(2000);
+s.close();
+ss.close();
+break;
+}
+if(!clientmessage.equalsIgnoreCase("no"))
+{
+String servermessage="Lets Start!!!";
+System.out.println(servermessage);
+datasend.writeUTF(servermessage);
+int n1=dataread.readInt();
+int n2=dataread.readInt();
+table t=new table();
+MyThread thread1=new MyThread(t,n1);
+MyThread thread2=new MyThread(t,n2);
+thread1.start();
+thread2.start();
+datasend.flush();
+datasend.close();
+s.close();
+ss.close();
+// break;
+Thread.sleep(1000);
+continue starting;
+}}
+catch(Exception e)
+{
+System.out.println(e);
+}
+}
+}
+}
+class table{
+void printTable(int n)
+{
+for(int i=1;i<=10;i++)
+{
+System.out.println(n+"x"+i+"="+(n*i));
+}
+try
+{
+Thread.sleep(1000);
+}
+catch(Exception e)
+{
+System.out.println("SORRY UNABLE TO Process!!"+e.getMessage());
+}
+}
+}
+class MyThread extends Thread
+{
+table t;
+int n;
+MyThread(table t,int n)
+{
+this.t=t;
+this.n=n;
+}
+@Override
+public void run()
+{
+t.printTable(n);
+}
+}
+/*
+---------------------------SERVER--------------------------------
+Waiting for Client...
+Connection established...
+Message received from client: yes
+Lets Start!!!
+4x1=4
+4x2=8
+4x3=12
+4x4=16
+4x5=20
+4x6=24
+4x7=28
+4x8=32
+4x9=36
+4x10=40
+27x1=27
+27x2=54
+27x3=81
+27x4=108
+27x5=135
+27x6=162
+27x7=189
+27x8=216
+27x9=243
+27x10=270
+---------------------------SERVER--------------------------------
+Waiting for Client...
+Connection established...
+Message received from client: no
+Exiting Message sending to client!!!
+*/
+public class Prac7Client
+{
+private static int n1,n2;
+public static void main(String[] args)
+{
+starting:
+while(true)
+{
+try
+{
+Socket s=new Socket("localhost",6666);
+DataOutputStream datasend=new DataOutputStream(s.getOutputStream());
+DataInputStream dataread=new DataInputStream(s.getInputStream());
+System.out.println("Do you want to start DS Practical 7 ?"
++ "\n(Write 'yes' or 'no')");
+Scanner sc=new Scanner(System.in);
+String str=sc.next();
+datasend.writeUTF(str);
+String client=dataread.readUTF();
+System.out.println("Echo message received from server: "+client);
+if(client.equalsIgnoreCase("ok"))
+{
+System.out.println("Closing this client....");
+Thread t =new Thread();
+t.sleep(2000);
+datasend.flush();
+datasend.close();
+s.close();
+break;
+}
+else
+{
+System.out.println("---------------------------CLIENT-------------------------------
+-");
+Getinput();
+datasend.writeInt(n1);
+datasend.writeInt(n2);
+System.out.println("Numbers are sent to the server ");
+datasend.flush();
+datasend.close();
+s.close();
+Thread.sleep(1000);
+continue starting;
+}
+}
+catch(Exception e)
+{
+e.printStackTrace();
+}
+}
+}
+static void Getinput()
+{
+Scanner sc = new Scanner(System.in);
+System.out.println("----INPUT---");
+System.out.print("Enter First number :- ");
+n1 = sc.nextInt();
+System.out.print("Enter Second number :- ");
+n2 = sc.nextInt();
+}
+}
+/*
+Do you want to start DS Practical 7 ?
+(Write 'yes' or 'no')
+yes
+Echo message received from server: Lets Start!!!
+---------------------------CLIENT--------------------------------
+----INPUT---
+Enter First number :- 4
+Enter Second number :- 27
+Numbers are sent to the server
+Do you want to start DS Practical 7 ?
+(Write 'yes' or 'no')
+no
+Echo message received from server: ok
+Closing this client....*/

@@ -1,0 +1,143 @@
+Practical 4:-
+import java.rmi.*;
+public interface One extends Remote
+{
+//public void transpose(int mat[][],int rows,int columns)throws RemoteException;
+public void Check_Armstrong_NO(int number)throws RemoteException;
+}
+import java.rmi.server.UnicastRemoteObject;
+import java.util.Scanner;
+public class Two extends UnicastRemoteObject implements One
+{
+public Two()throws RemoteException
+{
+}
+@Override
+public void transpose(int mat[][],int rows,int columns)throws RemoteException
+{
+//creating a matrix
+//int original[][]={{1,3,4},{2,4,3},{3,4,5}};
+//creating another matrix to store transpose of a matrix
+int transpose[][]=new int[rows][columns]; //3 rows and 3 columns
+//Code to transpose a matrix
+for(int i=0;i<3;i++)
+{
+for(int j=0;j<3;j++)
+{
+transpose[i][j]=mat[j][i];
+}
+}
+System.out.println("Printing Matrix without transpose:");
+for(int i=0;i<3;i++)
+{
+for(int j=0;j<3;j++)
+{
+System.out.print(mat[i][j]+" ");
+}
+System.out.println();//new line
+}
+System.out.println("Printing Matrix After Transpose:");
+for(int i=0;i<3;i++)
+{
+for(int j=0;j<3;j++)
+{
+System.out.print(transpose[i][j]+" ");
+}
+System.out.println();//new line
+}
+}
+}
+public class Rmi_Client
+{
+public static void main(String[] args) throws Exception
+{
+try
+{
+Registry r= LocateRegistry.getRegistry("172.16.162.75",1990);
+String s1= "Armstrong";
+One o1 = (One)r.lookup(s1);
+Getinput(o1);
+}
+catch(Exception e)
+{
+//e.printStackTrace();
+System.out.println("Server is closed");
+}
+}
+public static void Getinput(One obj)throws RemoteException
+{
+Scanner s = new Scanner(System.in);
+System.out.println("\t\t\n*****Welcome*****\t\n\n*****Connected to other
+PC*****\t\n\n!!!Respected User!!!"
++ "\n\tAIM: To check whether a number is armstrong or not.");
+System.out.print("Enter the number: ");
+int arm_num=s.nextInt();
+obj.Check_Armstrong_NO(arm_num);
+}}
+/*
+OUTPUT:- 4.a
+*****Welcome*****
+!!!Respected User!!!
+AIM: To Show Transpose of a matrix
+Enter the no. of rows for matrix : 3
+Enter the no. of columns for matrix : 3
+Enter the elements of matrix:-
+1
+2
+3
+4
+5
+6
+7
+8
+9
+*/
+/*
+OUTPUT:- 4.b
+*****Welcome*****
+!!!Respected User!!!
+AIM: To check whether a number is armstrong or not.
+Enter the number: 371
+*/
+/*
+OUTPUT:- 4.c
+*****Welcome*****
+*****Connected to other PC*****
+!!!Respected User!!!
+AIM: To check whether a number is armstrong or not.
+Enter the number: 371
+*/
+public class Rmi_Server
+{
+public static void main(String[] args) throws Exception
+{
+try
+{
+Registry r= LocateRegistry.createRegistry(1990);
+Two t1 = new Two();
+r.rebind("Armstrong", t1);
+System.out.println("Object registered");
+}
+catch(Exception e)
+{
+e.printStackTrace();
+}
+}
+}
+/*
+OUTPUT:-4.a
+Object registered
+Printing Matrix without transpose:
+1 2 3
+4 5 6
+7 8 9
+Printing Matrix After Transpose:
+1 4 7
+2 5 8
+3 6 9
+*/
+/*
+OUTPUT:- 4.b
+Object registered
+Dear user!!!
+The number

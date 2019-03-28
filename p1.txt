@@ -1,0 +1,181 @@
+import java.util.Scanner;
+
+public class Lamp {
+    
+    static Scanner sc = new Scanner(System.in);
+    
+    public static void main(String[] args) {
+        
+        //Input total Process and total number of Events to Intialize the Process Object and make a Array of processes
+        System.out.println("Enter the Processes");
+        int totalProcess = sc.nextInt();
+        Process processes[] = new Process[totalProcess];
+        int totalEventsPerProcess;
+        for(int i = 0;i<totalProcess;i++)
+        {
+            System.out.println("Enter the number of Events");
+            totalEventsPerProcess = sc.nextInt();
+            processes[i] = new Process(totalEventsPerProcess,i);
+        }
+        
+        //
+        int totalDependenciesOfEachEvent;
+        for(int i=0;i<totalProcess;i++)
+        {
+            for(int j=0;j<processes[i].E.length ; j++)
+            {
+                System.out.println("Enter the number of dependencies for process " + (i+1) + " and Event " + (j+1));
+                totalDependenciesOfEachEvent = sc.nextInt();
+                if(j>0)
+                    processes[i].E[j] = new Event(totalDependenciesOfEachEvent + 1,((i+1) + "" + (j+1)));
+                else
+                    processes[i].E[j] = new Event(totalDependenciesOfEachEvent,((i+1) + "" + (j+1)));
+            }
+        }
+        
+        //
+        for(int i=0;i<totalProcess;i++)
+        {
+            for(int j=0;j<processes[i].E.length;j++)
+            {
+                    int temp1 = processes[i].E[j].depend.length;
+                    int temp2 = processes[i].E[j].depend.length - 1;
+                    int flag;
+                    if(j == 0)
+                        flag = temp1;
+                    else
+                        flag = temp2;
+                    for(int k=0;k<flag;k++)
+                    {
+                        System.out.println("Enter the dependencies for process " + (i+1) + " and Event " + (j+1));
+                        int dProcess = sc.nextInt();
+                        int dEvent = sc.nextInt();
+                        processes[i].E[j].depend[k] = processes[dProcess-1].E[dEvent-1];
+                    }
+                    if(j>0)
+                    {
+                        processes[i].E[j].depend[processes[i].E[j].depend.length-1] = processes[i].E[j-1];
+                    }
+            }
+        }
+        
+        
+        
+        for(int i=0;i<totalProcess;i++)
+        {
+            for(int j=0;j<processes[i].E.length ; j++)
+            {
+                
+                processes[i].E[j].compute();
+                
+            }
+        }
+        
+        for(int i=0;i<totalProcess;i++)
+        {
+            for(int j=0;j<processes[i].E.length ; j++)
+            {
+                
+                System.out.print(processes[i].E[j].time + "  ");
+                
+            }
+            System.out.println("");
+        }
+        
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+class Process
+{
+    Event E[];
+    String name;
+    Process(int n,int i)
+    {
+        E = new Event[n];
+        name = String.valueOf(i+1);
+    }
+}
+
+
+
+
+
+
+
+
+
+class Event
+{
+    int time = -999;
+    Event depend[];
+    boolean isComputed = false;
+    String name;
+    Event(int n,String name)
+    {
+        this.name = name; 
+        if(n == 0)
+        {
+            depend = new Event[n];
+            isComputed = true;
+            time = 1;
+        }
+        else
+        {
+            depend = new Event[n];
+        }
+    }
+    
+    int  compute()
+    {
+       int max = -999;
+       int temp = -999;
+       if(isComputed == false)
+       {
+           for(int i=0;i<this.depend.length;i++)
+           {
+               temp = this.depend[i].compute();
+               if(temp > max)
+               {
+                   max = temp;
+               }
+           }
+           isComputed = true;
+           this.time = max + 1;
+           return this.time;
+       }
+       return this.time;
+    }
+}
+
+
+
+
+
+
+
+
+
+5
+5 4 4 4 3
+0 0 0 1 1
+1 0 1 1
+1 1 0 1
+0 1 1 0
+0 1 0
+2 2  4 4
+3 1  3 3  5 3
+1 1  4 1  2 3
+5 1  5 2
+4 2

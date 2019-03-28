@@ -1,0 +1,178 @@
+import java.io.*;
+import java.net.*;
+import java.util.*;
+public class Prac6Server {
+int index=1;
+boolean closed = false, inputFromAll = false;
+List<ClientThread> thread;
+List<String> data;
+Prac6Server() {
+thread = new ArrayList<>();
+data = new ArrayList<>();
+}
+public static void main(String args[]) throws IOException {
+Socket clientSocket = null;
+ServerSocket serverSocket = null;
+int port_number = 1111;
+Prac6Server server = new Prac6Server();
+try {
+serverSocket = new ServerSocket(port_number);
+} catch (IOException e) {
+System.out.println(e);
+}
+while (!server.closed){
+try {
+clientSocket = serverSocket.accept();
+ClientThread clientThread = new ClientThread(server, clientSocket);
+(server.thread).add(clientThread);
+System.out.println("\nNow Total clients are : " + (server.thread).size());
+(server.data).add("NOT_SENT");
+clientThread.start();
+} catch (IOException e) { }
+}
+serverSocket.close();
+}
+}
+class ClientThread extends Thread{
+DataInputStream is = null;
+String line;
+String destClient = "";
+String name;
+PrintStream os = null;
+Socket clientSocket = null;
+String clientIdentity;
+Prac6Server server;
+public ClientThread(Prac6Server server, Socket clientSocket){
+this.clientSocket = clientSocket;
+this.server = server;
+}
+@SuppressWarnings("deprecation")
+@Override
+public void run(){
+try {
+is = new DataInputStream(clientSocket.getInputStream());
+os = new PrintStream(clientSocket.getOutputStream());
+os.println("Enter your name.");
+name = is.readLine();
+clientIdentity = name;
+os.println("Welcome " + name +"\nYou will receive a vote Request now...");
+os.println("COMMIT_REQUEST\nPlease enter COMMIT or ABORT to
+proceed : ");
+while (true){
+line = is.readLine();
+if (line.equalsIgnoreCase("ABORT")){
+System.out.println("\nFrom '" + clientIdentity+ "' : ABORT.");
+System.out.println("\nAborted....");
+for (int i = 0; i < (server.thread).size(); i++) {
+((server.thread).get(i)).os.println("GLOBAL_ABORT");
+((server.thread).get(i)).os.close();
+((server.thread).get(i)).is.close();
+}
+break;
+}
+if (line.equalsIgnoreCase("COMMIT")){
+System.out.println("\nFrom '" + clientIdentity + "' : COMMIT");
+if ((server.thread).contains(this)){
+(server.data).set((server.thread).indexOf(this), "COMMIT");
+for (int j = 0; j < (server.data).size(); j++){
+if (!(((server.data).get(j)).equalsIgnoreCase("NOT_SENT"))){
+server.inputFromAll = true;
+continue;
+}
+else{
+server.inputFromAll = false;
+System.out.println("\nWaiting for inputs from other
+clients.");
+break;
+}
+}
+if (server.inputFromAll){
+System.out.println("\n\nCommited....");
+for (int i = 0; i < (server.thread).size(); i++){
+((server.thread).get(i)).os.println("GLOBAL_COMMIT");
+((server.thread).get(i)).os.close();
+((server.thread).get(i)).is.close();
+}
+break;
+} }} }
+server.closed = true;
+clientSocket.close();
+} catch (IOException e) { } }}/*
+run:
+Now Total clients are : 1
+Now Total clients are : 2
+From 'def' : COMMIT
+Waiting for inputs from other clients.
+From 'abc' : COMMIT
+Commited....
+*/
+package DSPracticals.practical6;
+import java.io.*;
+import java.net.*;
+public class Prac6Client implements Runnable{
+static Socket clientSocket = null;
+static PrintStream os = null;
+static DataInputStream is = null;
+static BufferedReader inputLine = null;
+static boolean closed = false;
+public static void main(String[] args){
+int port_number=1111;
+String host="localhost";
+try {
+} catch (Exception e){
+System.out.println("Exception occurred : "+e.getMessage());
+}
+if (clientSocket != null && os != null && is != null){
+try{
+new Thread(new Prac6Client()).start();
+while (!closed){
+os.println(inputLine.readLine());
+}
+os.close();
+is.close();
+clientSocket.close();
+} catch (IOException e){
+System.err.println("IOException: " + e);
+}
+}
+}
+public void run(){
+String responseLine;
+try{
+while ((responseLine = is.readLine()) != null){
+System.out.println("\n"+responseLine);
+if (responseLine.equalsIgnoreCase("GLOBAL_COMMIT")==true ||
+responseLine.equalsIgnoreCase("GLOBAL_ABORT")==true ){
+break;
+}
+}
+closed=true;
+}
+catch (IOException e){
+System.err.println("IOException: " + e);
+}
+}
+}
+/*
+run:
+Enter your name.
+abc
+Welcome abc
+You will receive a vote Request now...
+COMMIT_REQUEST
+Please enter COMMIT or ABORT to proceed :
+commit
+GLOBAL_COMMIT
+BUILD SUCCESSFUL (total time: 19 seconds)
+*/
+/*
+run:
+Enter your name.
+def
+Welcome def
+You will receive a vote Request now...
+COMMIT_REQUEST
+Please enter COMMIT or ABORT to proceed :
+commit
+GLOBAL_COMMIT
+*/

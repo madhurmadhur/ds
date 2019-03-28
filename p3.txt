@@ -1,0 +1,421 @@
+DSPractical3
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Scanner;
+import java.util.Queue;
+
+/**
+ *
+ * @author PRANAY
+ */
+
+import java.util.*;
+
+class Node
+{
+    Node parent;
+    ArrayList<Node> children_list ;
+    int value;
+    Queue<Integer> Reqest_queue;
+    
+    Node(Node p,int v){
+        parent = p;
+        children_list = new ArrayList<>();
+        value = v;
+        Reqest_queue = new LinkedList<>();
+    }
+}
+//class node is created to store children of each node and request_queue of each node.
+public class RaymondAlgorithm
+{
+    
+    Scanner sc = new Scanner(System.in);
+    Node root ;
+    HashMap<Integer,Node> map = new HashMap<>();
+    //Used to map a 'PARENT' node and all its children and request_queue
+    //It makes it easy for searching and printing.
+    
+    public void Getinput() throws Exception
+    {   
+        System.out.print("Enter the Root Node : ");
+        int rootValue = sc.nextInt();
+        Node r = new Node(null,rootValue);
+        map.put(rootValue, r);
+        root = r;
+        Build_Tree(r);
+        System.out.println("\n*****Tree*****\n");
+        System.out.println("Parent"+"<--"+"Child");
+        Print_Tree(r);
+        System.out.println("");
+        Request_for_Token();
+        System.out.println("\n*****Queue*****\n");
+        System.out.println("Node"+":"+"Request Queue");
+        Print_Queue();
+        System.out.println("");
+        Reply_to_Request(r);
+        System.out.println("");
+        Print_Queue();
+        
+    }
+    
+    void Reply_to_Request(Node n) throws Exception
+    {  
+        try
+        {
+            if(n.Reqest_queue.peek()==n.value)//peek() gives head value
+            {
+                System.out.println("Request to Node ["+n.value+"] completed.");
+                n.Reqest_queue.remove();//removes head value
+                System.out.println("\n*****Tree*****\n");
+                System.out.println("Parent"+"<--"+"Child");
+                Print_Tree(root);
+                System.out.println("");
+                Request_for_Token();
+            }
+            Integer a = n.Reqest_queue.poll();
+            //returns head value and also delete it from the queue
+            //queue empty hua ki nahi wo check kiya hai.agar nhi to execute if()
+            //untill all the queue is empty.       
+            if(a!=null){
+                Node next ;
+                for(Node x : n.children_list)
+                {
+                    if(x.value == a)
+                    {
+                        n.parent = x;
+                        next = x;
+                        n.children_list.remove(x);
+                        if(n.Reqest_queue.peek()!=null){
+                            x.Reqest_queue.add(n.value);
+                        }
+                        
+                    }
+                }
+            }       
+        }
+        catch(NullPointerException e)
+        {
+            
+        }
+        
+    }
+    
+    void Request_for_Token()
+    {
+        System.out.print("Enter No of Request ?: ");
+        int no = sc.nextInt();
+        while(no-->0)
+        {
+            System.out.print("Enter Next Requesting Node : ");
+            int value = sc.nextInt();
+            Node n = map.get(value);
+            if(!n.Reqest_queue.contains((int)value))
+            {
+                n.Reqest_queue.add(value);
+                if(n.parent!=null)
+                Fill_Request_Queue(n.parent,n.value);
+            }
+        }
+    }
+    
+    void Fill_Request_Queue(Node n,int v){
+        if(!n.Reqest_queue.contains((int)v)){
+            n.Reqest_queue.add(v);
+            if(n.parent!=null)
+                Fill_Request_Queue(n.parent,n.value);
+//request queue will be updated untill the root node.thats why recursion is called.
+        }
+    }
+    
+    void Build_Tree(Node n){
+        Node nn;
+        System.out.println("Enter No of Childs of Node ["+n.value+"] ? ");
+        int c = sc.nextInt();
+        for(Node x:n.children_list)
+            Build_Tree(x);//recursively calling to bild the tree,to store values for each node.
+    }
+    void Print_Tree(Node n){
+        
+        for(Node x :n.children_list)
+            System.out.println("   "+n.value+"  <-- "+"  "+x.value);
+        for(Node x:n.children_list)
+            Print_Tree(x);
+    }
+    void Print_Queue()
+    {        
+        for(int i:map.keySet())
+            System.out.println("  "+i+" : "+map.get(i).Reqest_queue);
+    }  
+}
+
+/*OUTPUT:-
+Enter the Root Node : 1
+Enter No of Childs of Node [1] ? 
+2
+Enter Child of Node [1] -> 2
+Enter Child of Node [1] -> 3
+Enter No of Childs of Node [2] ? 
+2
+Enter Child of Node [2] -> 4
+Enter Child of Node [2] -> 5
+Enter No of Childs of Node [4] ? 
+0
+Enter No of Childs of Node [5] ? 
+0
+Enter No of Childs of Node [3] ? 
+3
+Enter Child of Node [3] -> 6
+Enter Child of Node [3] -> 7
+Enter Child of Node [3] -> 8
+Enter No of Childs of Node [6] ? 
+0
+Enter No of Childs of Node [7] ? 
+0
+Enter No of Childs of Node [8] ? 
+0
+
+*****Tree*****
+
+Parent<--Child
+   1  <--   2
+   1  <--   3
+   2  <--   4
+   2  <--   5
+   3  <--   6
+   3  <--   7
+   3  <--   8
+
+Enter No of Request ?: 3
+Enter Next Requesting Node : 8
+Enter Next Requesting Node : 2
+Enter Next Requesting Node : 6
+
+*****Queue*****
+
+Node:Request Queue
+  1 : [3, 2]
+  2 : [2]
+  3 : [8, 6]
+  4 : []
+  5 : []
+  6 : [6]
+  7 : []
+  8 : [8]
+
+
+New Root : 3
+
+*****Queue*****
+
+Node:Request Queue
+  1 : [2]
+  2 : [2]
+  3 : [8, 6, 1]
+  4 : []
+  5 : []
+  6 : [6]
+  7 : []
+  8 : [8]
+
+
+New Root : 8
+
+*****Queue*****
+
+Node:Request Queue
+  1 : [2]
+  2 : [2]
+  3 : [6, 1]
+  4 : []
+  5 : []
+  6 : [6]
+  7 : []
+  8 : [8, 3]
+
+Request to Node [8] completed.
+
+*****Tree*****
+
+Parent<--Child
+   8  <--   3
+   3  <--   6
+   3  <--   7
+   3  <--   1
+   1  <--   2
+   2  <--   4
+   2  <--   5
+
+Enter No of Request ?: 0
+
+New Root : 3
+
+*****Queue*****
+
+Node:Request Queue
+  1 : [2]
+  2 : [2]
+  3 : [6, 1]
+  4 : []
+  5 : []
+  6 : [6]
+  7 : []
+  8 : []
+
+
+New Root : 6
+
+*****Queue*****
+
+Node:Request Queue
+  1 : [2]
+  2 : [2]
+  3 : [1]
+  4 : []
+  5 : []
+  6 : [6, 3]
+  7 : []
+  8 : []
+
+Request to Node [6] completed.
+
+*****Tree*****
+
+Parent<--Child
+   6  <--   3
+   3  <--   7
+   3  <--   1
+   3  <--   8
+   1  <--   2
+   2  <--   4
+   2  <--   5
+
+Enter No of Request ?: 1
+Enter Next Requesting Node : 7
+
+New Root : 3
+
+*****Queue*****
+
+Node:Request Queue
+  1 : [2]
+  2 : [2]
+  3 : [1, 7]
+  4 : []
+  5 : []
+  6 : []
+  7 : [7]
+  8 : []
+
+
+New Root : 1
+
+*****Queue*****
+
+Node:Request Queue
+  1 : [2, 3]
+  2 : [2]
+  3 : [7]
+  4 : []
+  5 : []
+  6 : []
+  7 : [7]
+  8 : []
+
+
+New Root : 2
+
+*****Queue*****
+
+Node:Request Queue
+  1 : [3]
+  2 : [2, 1]
+  3 : [7]
+  4 : []
+  5 : []
+  6 : []
+  7 : [7]
+  8 : []
+
+Request to Node [2] completed.
+
+*****Tree*****
+
+Parent<--Child
+   2  <--   4
+   2  <--   5
+   2  <--   1
+   1  <--   3
+   3  <--   7
+   3  <--   8
+   3  <--   6
+
+Enter No of Request ?: 0
+
+New Root : 1
+
+*****Queue*****
+
+Node:Request Queue
+  1 : [3]
+  2 : []
+  3 : [7]
+  4 : []
+  5 : []
+  6 : []
+  7 : [7]
+  8 : []
+
+
+New Root : 3
+
+*****Queue*****
+
+Node:Request Queue
+  1 : []
+  2 : []
+  3 : [7]
+  4 : []
+  5 : []
+  6 : []
+  7 : [7]
+  8 : []
+
+
+New Root : 7
+
+*****Queue*****
+
+Node:Request Queue
+  1 : []
+  2 : []
+  3 : []
+  4 : []
+  5 : []
+  6 : []
+  7 : [7]
+  8 : []
+
+Request to Node [7] completed.
+
+*****Tree*****
+
+Parent<--Child
+   7  <--   3
+   3  <--   8
+   3  <--   6
+   3  <--   1
+   1  <--   2
+   2  <--   4
+   2  <--   5
+
+Enter No of Request ?: 0
+
+  1 : []
+  2 : []
+  3 : []
+  4 : []
+  5 : []
+  6 : []
+  7 : []
+  8 : []
+*/

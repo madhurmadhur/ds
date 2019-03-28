@@ -1,0 +1,488 @@
+package DSPracticals.practical5;
+import java.rmi.*;
+public interface RMIInterface extends Remote {
+public void insert(int roll_no, String fname, String lname, double cgpa, String
+semester) throws RemoteException;
+public void delete(int accid)throws RemoteException;
+public void select()throws RemoteException;
+public void update(int roll_no,String what,String which)throws RemoteException;
+}
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+public class RMImplementation extends UnicastRemoteObject
+implements RMIInterface {
+Connection con;
+Statement stmt;
+ResultSet rs;
+public RMImplementation()throws RemoteException, ClassNotFoundException,
+SQLException{
+Class.forName("oracle.jdbc.driver.OracleDriver");
+con=DriverManager.getConnection("jdbc:oracle:thin:@localhost:1521:PRANAYORAC"
+,"scott","tiger");
+stmt=con.createStatement();
+};
+@Override
+public void insert(int roll_no, String fname, String lname, double cgpa, String
+semester) throws RemoteException
+{
+try
+{
+stmt.executeUpdate("INSERT INTO STUDENT "
++
+"VALUES("+roll_no+",'"+fname+"\','"+lname+"\',"+cgpa+",'"+semester+"\')");
+System.out.println("\nRECORD ADDED SUCCESSFULLY!!!");
+//con.close();
+} catch (SQLException ex) {
+System.out.println("SORRY UNABLE TO INSERT!!!"+ex.getMessage());
+}
+}
+@Override
+public void delete(int roll_no) {
+String query = "delete from STUDENT where ROLL_NO = "+roll_no;
+try {
+PreparedStatement preparedStmt = con.prepareStatement(query);
+preparedStmt.execute();
+System.out.println("\nRECORD DELETED SUCCESSFULLY!!!");
+//con.close();
+} catch (SQLException ex) {
+System.out.println("SORRY UNABLE TO DELETE!!!"+ex.getMessage());
+}
+}
+@Override
+public void select() throws RemoteException {
+try {
+rs=stmt.executeQuery("select * from STUDENT");int i=1;
+if(!rs.next())
+{
+System.out.println("\nNO RECORDS TO PRINT!!!");
+}
+while(rs.next())
+{
+System.out.println("\n\t\t***** ROW "+i+" *****");
+System.out.println("ROLL_NO: "+rs.getInt(1)+"\nF NAME: "+rs.getString(2)
++"\nL NAME : "+rs.getString(3)+"\nCGPA: "+rs.getDouble(4)+"\nSEMESTER:
+"+rs.getString(5));
+i++;
+}
+if(i>1)
+System.out.println("\nALL RECORDS PRINTED SUCCESSFULLY!!!");
+//con.close();
+} catch (SQLException ex) {
+System.out.println("ERROR HERE!!! "+ex.getMessage());
+}
+}
+@Override
+public void update(int roll_no, String what, String which) throws RemoteException {
+String query = "update STUDENT set "+what+" = "+which+" where ROLL_NO =
+"+roll_no;
+PreparedStatement preparedStmt;
+try {
+preparedStmt = con.prepareStatement(query);
+preparedStmt.executeUpdate();
+System.out.println("\nRECORD UPDATED SUCCESSFULLY!!!");
+//con.close();
+} catch (SQLException ex) {
+System.out.println("SORRY UNABLE TO UPDATE!!"+ex.getMessage());
+}
+}
+}
+/*
+CREATE TABLE STUDENT(
+ROLL_NO NUMBER(4) NOT NULL,
+FNAME VARCHAR2(15) NOT NULL,
+LNAME VARCHAR2(15) NOT NULL,
+CGPA NUMBER(4,2) NOT NULL,
+SEMESTER VARCHAR2(10)
+);
+*/
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+public class RMIServer {
+public static void main(String[] args) throws Exception
+{
+try{
+Registry r= LocateRegistry.createRegistry(1990);
+RMIInterface myInterfaceA=new RMImplementation();
+RMIInterface myInterfaceB=new RMImplementation();
+RMIInterface myInterfaceC=new RMImplementation();
+RMIInterface myInterfaceD=new RMImplementation();
+r.bind("insert", myInterfaceA);
+System.out.println("INSERT REGISTERD SUCCESFULLY!!!");
+r.bind("update", myInterfaceB);
+System.out.println("UPDATE REGISTERD SUCCESFULLY!!!");
+r.bind("delete", myInterfaceC);
+System.out.println("DELETE REGISTERD SUCCESFULLY!!!");
+r.bind("select", myInterfaceD);
+System.out.println("SELECT REGISTERD SUCCESFULLY!!!");
+}catch(Exception e){
+e.printStackTrace();
+}
+}
+}
+/*
+OUTPUT:-
+INSERT REGISTERD SUCCESFULLY!!!
+UPDATE REGISTERD SUCCESFULLY!!!
+DELETE REGISTERD SUCCESFULLY!!!
+SELECT REGISTERD SUCCESFULLY!!!
+NO RECORDS TO PRINT!!!
+RECORD ADDED SUCCESSFULLY!!!
+RECORD ADDED SUCCESSFULLY!!!
+RECORD ADDED SUCCESSFULLY!!!
+***** ROW 1 *****
+ROLL_NO: 62
+F NAME: Sahil
+L NAME : Khan
+CGPA: 7.98
+SEMESTER: Eight
+***** ROW 2 *****
+ROLL_NO: 44
+F NAME: Dinesh
+L NAME : Yadav
+CGPA: 7.56
+SEMESTER: Eight
+***** ROW 3 *****
+ROLL_NO: 35
+F NAME: Akash
+L NAME : Pandey
+CGPA: 7.88
+SEMESTER: Eight
+ALL RECORDS PRINTED SUCCESSFULLY!!!
+RECORD ADDED SUCCESSFULLY!!!
+***** ROW 1 *****
+ROLL_NO: 62
+F NAME: Sahil
+L NAME : Khan
+CGPA: 7.98
+SEMESTER: Eight
+***** ROW 2 *****
+ROLL_NO: 44
+F NAME: Dinesh
+L NAME : Yadav
+CGPA: 7.56
+SEMESTER: Eight
+***** ROW 3 *****
+ROLL_NO: 35
+F NAME: Akash
+L NAME : Pandey
+CGPA: 7.88
+SEMESTER: Eight
+***** ROW 4 *****
+ROLL_NO: 55
+F NAME: Pranay
+L NAME : Sharma
+CGPA: 7.95
+SEMESTER: Eight
+ALL RECORDS PRINTED SUCCESSFULLY!!!
+RECORD DELETED SUCCESSFULLY!!!
+***** ROW 1 *****
+ROLL_NO: 44
+F NAME: Dinesh
+L NAME : Yadav
+CGPA: 7.56
+SEMESTER: Eight
+***** ROW 2 *****
+ROLL_NO: 35
+F NAME: Akash
+L NAME : Pandey
+CGPA: 7.88
+SEMESTER: Eight
+***** ROW 3 *****
+ROLL_NO: 55
+F NAME: Pranay
+L NAME : Sharma
+CGPA: 7.95
+SEMESTER: Eight
+ALL RECORDS PRINTED SUCCESSFULLY!!!
+RECORD UPDATED SUCCESSFULLY!!!
+***** ROW 1 *****
+ROLL_NO: 44
+F NAME: Dinesh
+L NAME : Yadav
+CGPA: 6.89
+SEMESTER: Eight
+***** ROW 2 *****
+ROLL_NO: 35
+F NAME: Akash
+L NAME : Pandey
+CGPA: 7.88
+SEMESTER: Eight
+***** ROW 3 *****
+ROLL_NO: 55
+F NAME: Pranay
+L NAME : Sharma
+CGPA: 7.95
+SEMESTER: Eight
+ALL RECORDS PRINTED SUCCESSFULLY!!!
+*/
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.util.*;
+public class RMIClient {
+public static void main(String[] args) {
+try{
+Registry r= LocateRegistry.getRegistry("127.0.0.1",1990);
+String urlA="insert";
+String urlB="update";
+String urlC="delete";
+String urlD="select";
+RMIInterface interA=(RMIInterface)r.lookup(urlA);
+RMIInterface interB=(RMIInterface)r.lookup(urlB);
+RMIInterface interC=(RMIInterface)r.lookup(urlC);
+RMIInterface interD=(RMIInterface)r.lookup(urlD);
+Scanner sc=new Scanner(System.in);int counter1=0;int ch;
+DSPRACTICAL:
+while(true)
+{
+if(counter1!=0)
+{
+ch = 5;
+counter1=0;
+}
+else
+{
+System.out.println("\t\t!!!Dear user!!!");
+System.out.println("\n1.INSERT STUDENT RECORD\n2.PRINT STUDENT"
++ " RECORD\n3.DELETE STUDENT RECORD\n"
++ "4.UPDATE STUDENT RECORD\n"+"5.EXIT");
+System.out.println("\n\t!!!ENTER YOUR CHOICE!!!");
+ch=sc.nextInt();
+}
+switch(ch){
+case 1:
+System.out.println("ENTER ROLL_NO :-");
+int roll_no=sc.nextInt();
+System.out.println("ENTER FIRST NAME :-");
+String fname=sc.next();
+System.out.println("ENTER LAST NAME :-");
+String lname=sc.next();
+System.out.println("ENTER CGPA :-");
+double cgpa=sc.nextDouble();
+System.out.println("ENTER SEMESTER :-");
+String semester=sc.next();
+interA.insert(roll_no, fname, lname, cgpa, semester);
+System.out.println("\n\tRECORD ADDED SUCCESSFULLY!!!\n");
+break;
+case 2:
+interC.select();
+System.out.println("\n\t!!!ALL RECORDS PRINTED SUCCESSFULLY!!!\n\n");
+break;
+case 3:
+System.out.println("ENTER ROLL NUMBER TO DELETE");
+roll_no=sc.nextInt();
+interD.delete(roll_no);
+System.out.println("RECORD DELETED SUCCESSFULLY!!!\n\n");
+break;
+case 4:
+System.out.println("ENTER ROLL NUMBER TO UPDATE!!");
+int id=sc.nextInt();
+System.out.println("WHAT DO YOU WANT TO UPDATE ?");
+String what=sc.next();
+System.out.println("ENTER VALUE!!!");
+String val=sc.next();
+interB.update(id, what, val);
+System.out.println("RECORD UPDATED SUCCESSFULLY!!!\n\n");
+break;
+case 5:
+System.out.println("\nDo you wish to continue?"
++ "\n(Press yes to continue) or "
++ "(Press no to exit)");
+String choice=" ";
+choice= sc.next();
+if(choice.equalsIgnoreCase("yes"))
+continue DSPRACTICAL;
+if(choice.equalsIgnoreCase("no"))
+{
+System.out.println("\t\t!!!!! Exiting !!!!!");
+System.exit(1);
+}
+if(!(choice.equalsIgnoreCase("yes"))&&!(choice.equalsIgnoreCase("no")))//&&flag!=0
+)
+{
+System.out.println("\t!!!Dear user please give correct input!!!");
+counter1 = 1;
+}
+}
+}
+}catch(Exception e){
+System.out.println("ERROR!!!!");
+}
+}
+}
+/*
+OUTPUT:-
+!!!Dear user!!!
+1.INSERT STUDENT RECORD
+2.PRINT STUDENT RECORD
+3.DELETE STUDENT RECORD
+4.UPDATE STUDENT RECORD
+5.EXIT
+!!!ENTER YOUR CHOICE!!!
+2
+!!!Dear user!!!
+1.INSERT STUDENT RECORD
+2.PRINT STUDENT RECORD
+3.DELETE STUDENT RECORD
+4.UPDATE STUDENT RECORD
+5.EXIT
+!!!ENTER YOUR CHOICE!!!
+1
+ENTER ROLL_NO :-
+62
+ENTER FIRST NAME :-
+Sahil Khan
+ENTER LAST NAME :-
+ENTER CGPA :-
+7.98
+ENTER SEMESTER :-
+Eight
+RECORD ADDED SUCCESSFULLY!!!
+!!!Dear user!!!
+1.INSERT STUDENT RECORD
+2.PRINT STUDENT RECORD
+3.DELETE STUDENT RECORD
+4.UPDATE STUDENT RECORD
+5.EXIT
+!!!ENTER YOUR CHOICE!!!
+1
+ENTER ROLL_NO :-
+44
+ENTER FIRST NAME :-
+Dinesh
+ENTER LAST NAME :-
+Yadav
+ENTER CGPA :-
+7.56
+ENTER SEMESTER :-
+Eight
+RECORD ADDED SUCCESSFULLY!!!
+!!!Dear user!!!
+1.INSERT STUDENT RECORD
+2.PRINT STUDENT RECORD
+3.DELETE STUDENT RECORD
+4.UPDATE STUDENT RECORD
+5.EXIT
+!!!ENTER YOUR CHOICE!!!
+1
+ENTER ROLL_NO :-
+35
+ENTER FIRST NAME :-
+Akash
+ENTER LAST NAME :-
+Pandey
+ENTER CGPA :-
+7.88
+ENTER SEMESTER :-
+Eight
+RECORD ADDED SUCCESSFULLY!!!
+!!!Dear user!!!
+1.INSERT STUDENT RECORD
+2.PRINT STUDENT RECORD
+3.DELETE STUDENT RECORD
+4.UPDATE STUDENT RECORD
+5.EXIT
+!!!ENTER YOUR CHOICE!!!
+2
+!!!ALL RECORDS PRINTED SUCCESSFULLY!!!
+!!!Dear user!!!
+1.INSERT STUDENT RECORD
+2.PRINT STUDENT RECORD
+3.DELETE STUDENT RECORD
+4.UPDATE STUDENT RECORD
+5.EXIT
+!!!ENTER YOUR CHOICE!!!
+1
+ENTER ROLL_NO :-
+55
+ENTER FIRST NAME :-
+Pranay
+ENTER LAST NAME :-
+Sharma
+ENTER CGPA :-
+7.95
+ENTER SEMESTER :-
+Eight
+RECORD ADDED SUCCESSFULLY!!!
+!!!Dear user!!!
+1.INSERT STUDENT RECORD
+2.PRINT STUDENT RECORD
+3.DELETE STUDENT RECORD
+4.UPDATE STUDENT RECORD
+5.EXIT
+!!!ENTER YOUR CHOICE!!!
+2
+!!!ALL RECORDS PRINTED SUCCESSFULLY!!!
+!!!Dear user!!!
+1.INSERT STUDENT RECORD
+2.PRINT STUDENT RECORD
+3.DELETE STUDENT RECORD
+4.UPDATE STUDENT RECORD
+5.EXIT
+!!!ENTER YOUR CHOICE!!!
+3
+ENTER ROLL NUMBER TO DELETE
+62
+RECORD DELETED SUCCESSFULLY!!!
+!!!Dear user!!!
+1.INSERT STUDENT RECORD
+2.PRINT STUDENT RECORD
+3.DELETE STUDENT RECORD
+4.UPDATE STUDENT RECORD
+5.EXIT
+!!!ENTER YOUR CHOICE!!!
+2
+!!!ALL RECORDS PRINTED SUCCESSFULLY!!!
+!!!Dear user!!!
+1.INSERT STUDENT RECORD
+2.PRINT STUDENT RECORD
+3.DELETE STUDENT RECORD
+4.UPDATE STUDENT RECORD
+5.EXIT
+!!!ENTER YOUR CHOICE!!!
+4
+ENTER ROLL NUMBER TO UPDATE!!
+44
+WHAT DO YOU WANT TO UPDATE ?
+cgpa
+ENTER VALUE!!!
+6.89
+RECORD UPDATED SUCCESSFULLY!!!
+!!!Dear user!!!
+1.INSERT STUDENT RECORD
+2.PRINT STUDENT RECORD
+3.DELETE STUDENT RECORD
+4.UPDATE STUDENT RECORD
+5.EXIT
+!!!ENTER YOUR CHOICE!!!
+2
+!!!ALL RECORDS PRINTED SUCCESSFULLY!!!
+!!!Dear user!!!
+1.INSERT STUDENT RECORD
+2.PRINT STUDENT RECORD
+3.DELETE STUDENT RECORD
+4.UPDATE STUDENT RECORD
+5.EXIT
+!!!ENTER YOUR CHOICE!!!
+5
+Do you wish to continue?
+(Press yes to continue) or (Press no to exit)
+yes
+!!!Dear user!!!
+1.INSERT STUDENT RECORD
+2.PRINT STUDENT RECORD
+3.DELETE STUDENT RECORD
+4.UPDATE STUDENT RECORD
+5.EXIT
+!!!ENTER YOUR CHOICE!!!
+5
+Do you wish to continue?
+(Press yes to continue) or (Press no to exit)
+no
+!!!!! Exiting !!!!!
+*/
